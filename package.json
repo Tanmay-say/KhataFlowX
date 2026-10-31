@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "corepack pnpm --filter @khataflow/api dev",
-    "web:dev": "node --env-file=.env apps/web/server.mjs",
+    "web:dev": "node --env-file=apps/web/.env apps/web/server.mjs",
+    "web:build": "node --env-file=apps/web/.env apps/web/build.mjs",
     "ai:check": "corepack pnpm --filter @khataflow/api ai:check",
     "ai:eval": "corepack pnpm --filter @khataflow/api ai:eval",
     "check": "eslint apps/api && tsc -p apps/api/tsconfig.json --noEmit && vitest run && node scripts/check-forbidden.mjs",

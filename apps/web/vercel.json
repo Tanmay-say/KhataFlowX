@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node build.mjs",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/login", "destination": "/index.html" },
+    { "source": "/onboarding", "destination": "/index.html" },
+    { "source": "/my-shops", "destination": "/index.html" },
+    { "source": "/invite/:token", "destination": "/index.html" },
+    { "source": "/pay/:token", "destination": "/index.html" },
+    { "source": "/client/:token", "destination": "/index.html" },
+    { "source": "/clients", "destination": "/index.html" },
+    { "source": "/clients/:path*", "destination": "/index.html" },
+    { "source": "/ledger", "destination": "/index.html" },
+    { "source": "/inventory", "destination": "/index.html" },
+    { "source": "/invoices", "destination": "/index.html" },
+    { "source": "/settings", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/manifest.webmanifest", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+  ]
+}

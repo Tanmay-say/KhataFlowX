@@ -9,6 +9,7 @@ vi.mock("../middleware/auth.js", () => ({
   requireBusiness: (req: { ctx?: Record<string, unknown> }, _res: unknown, next: () => void) => { req.ctx = { ...req.ctx, businessId: "10000000-0000-4000-8000-000000000001", role: "owner" }; next(); },
 }));
 vi.mock("../services/database.js", () => ({ databaseRequest: mocks.databaseRequest }));
+vi.mock("../services/telegram.js", () => ({ notifyTelegramPayment: vi.fn() }));
 
 import app from "../app.js";
 

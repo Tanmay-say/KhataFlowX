@@ -23,7 +23,11 @@ apps/*/.env*
 packages/*/.env*
 !**/.env.example
 !**/.env.template
-
+!apps/api/.env.vercel
+!apps/web/.env.vercel
+*/.env.vercel
+app/*/.env.vercel 
+apps/*/build/
 # ==========================================
 # Supabase Local Development & CLI
 # ==========================================
@@ -110,3 +114,5 @@ ehthumbs_vista.db
 Khataflow_V2_PRD.md
 AGENTS.md
 STATE.md
+*/api/.env.vercel
+*/web/.env.vercel

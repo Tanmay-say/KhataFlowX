@@ -8,6 +8,7 @@
   <meta name="referrer" content="no-referrer">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/assets/khataflow-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,11 +19,12 @@
   <div class="offline" id="offline" role="status" hidden>You are offline. Payment actions need a connection.</div>
   <header class="masthead">
     <a class="brand" href="/" aria-label="KhataFlow home"><span class="brand-mark" aria-hidden="true">K</span><span>KhataFlow</span></a>
-    <div class="masthead-actions"><span class="page-note">A clear account. A good relationship.</span><button class="text-button" id="language" type="button" aria-label="Switch language">हिन्दी</button><button class="install" id="install" type="button" hidden>Install</button></div>
+    <div class="masthead-actions"><span class="page-note">A clear account. A good relationship.</span><label class="sr-only" for="language">Language / भाषा</label><select class="text-button" id="language" aria-label="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="hinglish">Hinglish</option></select><button class="install" id="install" type="button">Install app</button></div>
   </header>
   <main id="app" class="page" aria-live="polite">
     <div class="loading" aria-label="Loading your account"><span></span><span></span><span></span></div>
   </main>
+  <p class="install-status" id="install-status" role="status" aria-live="polite"></p>
   <footer><span>KhataFlow</span><span>Payments by Paytm</span></footer>
   <script>window.KHATAFLOW_API_URL = "__API_URL__";</script>
   <script type="module" src="/app.js"></script>

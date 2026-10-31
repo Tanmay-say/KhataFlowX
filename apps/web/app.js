@@ -11,6 +11,8 @@ const copy = {
   en: { title: "Your khata with", balance: "Balance due · Baaki", trust: "A simple account, kept with care.", item: "Invoice / विवरण", paid: "Paid", due: "Due", pay: "Pay amount", placeholder: "Enter amount", cash: "I paid cash", test: "TEST MODE · No real money moves", mock: "Mock UPI payment", success: "Simulate success", failure: "Simulate failure", pending: "Pending, then success in 3 seconds", dueLabel: "Amount due", noInvoices: "No open invoices. Your account is up to date.", retry: "Try again", ready: "Choose a payment result below. This is a test payment.", paidMessage: "Payment recorded. Your balance is updated.", failedMessage: "Payment failed. Your balance has not changed.", cashMessage: "Cash payment sent to the shopkeeper for approval.", loading: "Loading your khata…", offline: "You are offline. Payment actions need a connection." },
   hi: { title: "आपका खाता", balance: "बाकी राशि · Balance due", trust: "आपका हिसाब, पूरी देखभाल के साथ।", item: "बिल / विवरण", paid: "जमा", due: "बाकी", pay: "राशि जमा करें", placeholder: "राशि लिखें", cash: "मैंने नकद दिया", test: "परीक्षण · असली पैसे नहीं कटेंगे", mock: "डेमो UPI भुगतान", success: "सफलता दिखाएँ", failure: "असफलता दिखाएँ", pending: "3 सेकंड बाद सफल दिखाएँ", dueLabel: "बाकी राशि", noInvoices: "कोई खुला बिल नहीं। आपका हिसाब पूरा है।", retry: "फिर कोशिश करें", ready: "नीचे भुगतान का नतीजा चुनें। यह परीक्षण है।", paidMessage: "भुगतान दर्ज हुआ। बाकी राशि अपडेट हो गई।", failedMessage: "भुगतान नहीं हुआ। बाकी राशि नहीं बदली।", cashMessage: "नकद भुगतान दुकानदार की मंज़ूरी के लिए भेजा गया।", loading: "खाता खुल रहा है…", offline: "आप ऑफलाइन हैं। भुगतान के लिए इंटरनेट चाहिए।" },
 };
+copy.hinglish = { title: "Tumhara khata", balance: "Baaki · Balance due", trust: "Aapka hisaab, dhyaan se rakha gaya hai.", item: "Bill / details", paid: "Jama", due: "Baaki", pay: "Payment karein", placeholder: "Amount likhein", cash: "Maine cash diya", test: "TEST MODE · Real paise nahi katenge", mock: "Mock UPI payment", success: "Success dikhayein", failure: "Failure dikhayein", pending: "3 seconds baad success", dueLabel: "Baaki amount", noInvoices: "Koi pending bill nahi. Aapka hisaab clear hai.", retry: "Dobara try karein", ready: "Neeche test payment ka result choose karein.", paidMessage: "Payment record ho gaya. Balance update hai.", failedMessage: "Payment fail hua. Balance same hai.", cashMessage: "Cash payment shopkeeper ki approval ke liye bhej diya.", loading: "Khata load ho raha hai…", offline: "Aap offline hain. Payment ke liye internet chahiye." };
+language = ["en", "hi", "hinglish"].includes(localStorage.getItem("khataflow-language")) ? localStorage.getItem("khataflow-language") : "en";
 const t = (key) => copy[language][key];
 const formatINR = (paise) => {
   try { const amount = BigInt(String(paise)); const rupees = new Intl.NumberFormat(language === "hi" ? "en-IN" : "en-IN").format(amount / 100n); return `₹${rupees}${amount % 100n ? `.${String(amount % 100n).padStart(2, "0")}` : ""}`; }
@@ -98,10 +100,21 @@ function showError() {
   app.innerHTML = `<section class="error-page"><div class="eyebrow">KhataFlow</div><h1>We couldn't open this khata.</h1><p class="intro">The link may have expired. Ask the shopkeeper to share a fresh one.</p><button class="retry" id="retry">${t("retry")}</button></section>`;
   document.querySelector("#retry").addEventListener("click", () => { app.innerHTML = `<div class="loading"><span></span><span></span><span></span></div>`; load().catch(showError); });
 }
-document.querySelector("#language").addEventListener("click", (event) => { language = language === "en" ? "hi" : "en"; document.documentElement.lang = language; event.currentTarget.textContent = language === "en" ? "हिन्दी" : "English"; if (data) render(); });
+document.querySelector("#language").value = language; document.querySelector("#language").addEventListener("change", (event) => { language = event.currentTarget.value; localStorage.setItem("khataflow-language", language); document.documentElement.lang = language === "hinglish" ? "en-IN" : language; if (data) render(); });
 window.addEventListener("online", () => { offline.hidden = true; });
 window.addEventListener("offline", () => { offline.textContent = t("offline"); offline.hidden = false; });
-window.addEventListener("beforeinstallprompt", (event) => { event.preventDefault(); pendingInstall = event; document.querySelector("#install").hidden = false; });
-document.querySelector("#install").addEventListener("click", async () => { if (pendingInstall) { await pendingInstall.prompt(); pendingInstall = undefined; } });
+window.addEventListener("beforeinstallprompt", (event) => { event.preventDefault(); pendingInstall = event; });
+document.querySelector("#install").addEventListener("click", async () => {
+  const status = document.querySelector("#install-status");
+  if (!pendingInstall) {
+    status.textContent = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? "To install: tap Share, then Add to Home Screen." : "Open your browser menu and choose Install app or Add to Home screen.";
+    return;
+  }
+  await pendingInstall.prompt();
+  const result = await pendingInstall.userChoice;
+  status.textContent = result.outcome === "accepted" ? "KhataFlow was added to your device." : "You can install KhataFlow any time from this button.";
+  pendingInstall = undefined;
+});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
-load().catch(showError);
+if (/^\/(pay|client)\/[^/]+/.test(location.pathname)) load().catch(showError);
+else import("/shopkeeper.js");

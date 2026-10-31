@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createHash, randomBytes } from "node:crypto";
 import {
   clientCreateSchema, clientUpdateSchema, inventoryCreateSchema, inventoryUpdateSchema,
   invoiceCreateSchema, paymentSchema, saleSchema, stockAdjustSchema,
@@ -61,6 +62,20 @@ coreRouter.get("/api/clients/:id/share-link", async (req, res) => {
     res.setHeader("cache-control", "no-store");
     return res.json({ url: new URL(`/pay/${token}`, env.APP_URL).toString(), expiresAt: new Date(expiresAt * 1000).toISOString() });
   } catch { return res.status(503).json({ error: "portal_link_unavailable" }); }
+});
+
+coreRouter.post("/api/clients/:id/invitations", async (req, res) => {
+  if (req.ctx!.role === "staff") return res.status(403).json({ error: "insufficient_role" });
+  const params = new URLSearchParams({ select: "id", business_id: `eq.${business(req)}`, id: `eq.${req.params.id}`, archived_at: "is.null", limit: "1" });
+  try {
+    const [client] = await databaseRequest<Record<string, unknown>[]>(`clients?${params}`);
+    if (!client) return res.status(404).json({ error: "not_found" });
+    const token = randomBytes(32).toString("base64url");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60_000).toISOString();
+    await databaseRequest("client_invitations", { method: "POST", body: { business_id: business(req), client_id: req.params.id, invited_by: actor(req), token_hash: createHash("sha256").update(token).digest("hex"), expires_at: expiresAt } });
+    res.setHeader("cache-control", "no-store");
+    return res.status(201).json({ url: new URL(`/invite/${token}`, env.APP_URL).toString(), expiresAt });
+  } catch (error) { sendDatabaseError(error, res); }
 });
 
 coreRouter.patch("/api/clients/:id", async (req, res) => {

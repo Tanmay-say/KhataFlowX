@@ -9,6 +9,15 @@ import { parseCommandWithUsage } from "../services/ai/muse.js";
 export const chatRouter = Router();
 chatRouter.use("/api/chat", authenticate, requireBusiness);
 
+chatRouter.get("/api/chat/history", async (req, res) => {
+  const params = new URLSearchParams({ select: "id,role,content,created_at", business_id: `eq.${req.ctx!.businessId}`, user_id: `eq.${req.ctx!.userId}`, channel: "eq.web", order: "created_at.desc", limit: "50" });
+  try {
+    const rows = await databaseRequest<Record<string, unknown>[]>(`chat_messages?${params}`);
+    res.setHeader("cache-control", "no-store");
+    res.json(rows.reverse());
+  } catch (error) { sendDatabaseError(error, res); }
+});
+
 type Client = { id: string; name: string; balance_paise: string };
 type Item = { id: string; item_name: string; unit: string; quantity: string; price_per_unit_paise: string };
 type StoredAction = Record<string, string | number | null | object>;
@@ -47,10 +56,10 @@ function formatPaise(value: string) {
   return `₹${amount / 100n}.${(amount < 0n ? -amount : amount) % 100n < 10n ? "0" : ""}${(amount < 0n ? -amount : amount) % 100n}`;
 }
 
-async function saveMessage(businessId: string, userId: string, role: "user" | "assistant", content: string, parsed?: unknown) {
+async function saveMessage(businessId: string, userId: string, role: "user" | "assistant", content: string, parsed?: unknown, channel: "web" | "telegram" = "web") {
   const rows = await databaseRequest<{ id: string }[]>("chat_messages?select=id", {
     method: "POST", prefer: "return=representation",
-    body: { business_id: businessId, user_id: userId, channel: "web", role, content, ...(parsed ? { parsed } : {}) },
+    body: { business_id: businessId, user_id: userId, channel, role, content, ...(parsed ? { parsed } : {}) },
   });
   if (!rows[0]) throw new Error("Chat message could not be saved");
   return rows[0].id;
@@ -134,14 +143,11 @@ async function readAction(intent: string, clientName: string | null, itemName: s
   return null;
 }
 
-chatRouter.post("/api/chat", async (req, res) => {
-  const input = chatRequestSchema.safeParse(req.body);
-  if (!input.success) return res.status(400).json({ error: "invalid_request" });
-  const businessId = req.ctx!.businessId;
-  const userId = req.ctx!.userId;
-  try {
-    const loaded = await loadChatContext(businessId, userId);
-    const userMessageId = await saveMessage(businessId, userId, "user", input.data.text);
+export async function processChatText(businessId: string, userId: string, inputText: string, channel: "web" | "telegram" = "web") {
+  const input = chatRequestSchema.safeParse({ text: inputText });
+  if (!input.success) throw new Error("invalid_request");
+  const loaded = await loadChatContext(businessId, userId);
+    const userMessageId = await saveMessage(businessId, userId, "user", input.data.text, undefined, channel);
     const result = await recordAiUsage(businessId, userId, () => parseCommandWithUsage(loaded.promptContext, input.data.text));
     const command = result.value as Awaited<ReturnType<typeof parseCommandWithUsage>>["value"];
     let message = command.reply;
@@ -168,9 +174,15 @@ chatRouter.post("/api/chat", async (req, res) => {
       message = outputs.filter((output): output is string => output !== null).join("\n");
     }
     if (!writes.length && !reads.length && command.confidence >= 0.75) message = command.reply;
-    await saveMessage(businessId, userId, "assistant", message, command);
-    res.json({ message, requiresConfirmation: Boolean(pendingActionId), ...(pendingActionId ? { pendingActionId } : {}) });
-  } catch (error) {
+    await saveMessage(businessId, userId, "assistant", message, command, channel);
+  return { message, requiresConfirmation: Boolean(pendingActionId), ...(pendingActionId ? { pendingActionId } : {}) };
+}
+
+chatRouter.post("/api/chat", async (req, res) => {
+  const input = chatRequestSchema.safeParse(req.body);
+  if (!input.success) return res.status(400).json({ error: "invalid_request" });
+  try { res.json(await processChatText(req.ctx!.businessId, req.ctx!.userId, input.data.text)); }
+  catch (error) {
     if (error instanceof Error && error.message.includes("Daily AI limit reached")) return res.status(429).json({ error: "daily_ai_limit_reached" });
     if (error instanceof Error && error.message.includes("Meta Model API is not configured")) return res.status(503).json({ error: "ai_unavailable" });
     res.status(502).json({ error: "chat_unavailable", message: "Abhi samajh nahi paaya, dobara try karein." });

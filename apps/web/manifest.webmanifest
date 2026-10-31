@@ -6,5 +6,9 @@
   "display": "standalone",
   "background_color": "#f2ecde",
   "theme_color": "#f2ecde",
-  "icons": [{ "src": "/assets/khataflow-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "icons": [
+    { "src": "/assets/khataflow-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/khataflow-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/khataflow-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }

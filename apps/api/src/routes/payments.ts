@@ -5,6 +5,7 @@ import { authenticate, requireBusiness } from "../middleware/auth.js";
 import { databaseRequest } from "../services/database.js";
 import { getPaymentProvider } from "../services/payments/index.js";
 import { createPortalToken, verifyPortalToken } from "../services/portalTokens.js";
+import { notifyTelegramPayment } from "../services/telegram.js";
 
 export const paymentsRouter = Router();
 type Scope = { businessId: string; clientId?: string; userId?: string; portal: boolean };
@@ -125,6 +126,7 @@ paymentsRouter.post("/api/payments/mock/:id/complete", authOrPortal, async (req,
     const settled = await databaseRequest<{ paymentId: string; balancePaise: string }>("rpc/rpc_record_payment", {
       method: "POST", body: { p_business: payment.business_id, p_client: payment.client_id, p_amount_paise: payment.amount_paise, p_method: payment.method, p_idem: `payment-settle:${payment.id}`, p_payment_id: payment.id, p_actor: scope.userId ?? null, p_allow_advance: false },
     });
+    await notifyTelegramPayment(payment.business_id, payment.client_id, payment.amount_paise);
     return res.json({ paymentId: payment.id, status: "SUCCEEDED", amountPaise: payment.amount_paise, balancePaise: settled.balancePaise });
   } catch { return res.status(503).json({ error: "payment_settlement_failed" }); }
 });

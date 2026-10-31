@@ -3,7 +3,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
-dotenv.config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../../.env") });
+const configDir = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(configDir, "../../.env") });
+dotenv.config({ path: resolve(configDir, "../../../../.env") });
 
 export const env = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -33,4 +35,10 @@ export const env = z.object({
   ALLOW_MOCK: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   PORTAL_SIGNING_SECRET: z.string().optional().transform((value) => value?.trim() || undefined).refine((value) => !value || value.length >= 16),
   PORTAL_LINK_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(72),
+  TELEGRAM_ADMIN_BOT_TOKEN: z.string().optional().transform((value) => value?.trim() || undefined),
+  TELEGRAM_CLIENT_BOT_TOKEN: z.string().optional().transform((value) => value?.trim() || undefined),
+  TELEGRAM_ADMIN_BOT_USERNAME: z.string().optional().transform((value) => value?.trim().replace(/^@/, "") || undefined),
+  TELEGRAM_CLIENT_BOT_USERNAME: z.string().optional().transform((value) => value?.trim().replace(/^@/, "") || undefined),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional().transform((value) => value?.trim() || undefined),
+  TELEGRAM_MODE: z.enum(["polling", "webhook"]).default("polling"),
 }).parse(process.env);

@@ -2,8 +2,9 @@
   "name": "@khataflow/api",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/dev.ts",
     "ai:check": "tsx src/scripts/ai-check.ts",
     "ai:eval": "tsx src/scripts/ai-eval.ts"
   },
@@ -19,6 +20,7 @@
     "openai": "^7.47.0",
     "pdf-lib": "^1.17.1",
     "regenerator-runtime": "^0.14.1",
+    "telegraf": "^4.16.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {

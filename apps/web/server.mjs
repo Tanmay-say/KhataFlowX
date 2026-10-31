@@ -5,11 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("./", import.meta.url));
 const port = Number(process.env.WEB_PORT || 5173);
-const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml" };
+const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png" };
 createServer(async (req, res) => {
   try {
     const pathname = new URL(req.url || "/", "http://localhost").pathname;
-    const file = pathname.startsWith("/assets/") || ["/styles.css", "/app.js", "/manifest.webmanifest", "/sw.js"].includes(pathname)
+    const file = pathname.startsWith("/assets/") || ["/styles.css", "/app.js", "/shopkeeper.js", "/manifest.webmanifest", "/sw.js"].includes(pathname)
       ? resolve(root, `.${pathname}`)
       : resolve(root, "index.html");
     if (!file.startsWith(resolve(root) + sep)) throw new Error("invalid_path");

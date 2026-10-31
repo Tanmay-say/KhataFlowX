@@ -7,10 +7,10 @@ select extensions.has_table('public','client_business_links','client shop links 
 select extensions.ok(has_function_privilege('service_role','public.rpc_record_sale(uuid,uuid,jsonb,bigint,bigint,text,text,uuid)','EXECUTE'),'service role can call the sale RPC');
 select extensions.ok(not has_function_privilege('authenticated','public.rpc_record_sale(uuid,uuid,jsonb,bigint,bigint,text,text,uuid)','EXECUTE'),'authenticated clients cannot write through the sale RPC');
 select extensions.ok(
- (select count(*)=21 and bool_and(relrowsecurity) from pg_class where relnamespace='public'::regnamespace and relkind='r'
+ (select count(*)=22 and bool_and(relrowsecurity) from pg_class where relnamespace='public'::regnamespace and relkind='r'
   and relname in ('businesses','business_members','client_profiles','clients','client_invitations','client_business_links',
    'inventory','invoices','payments','receipts','ledger_entries','payment_confirmations','orders','chat_messages',
-   'pending_actions','notifications','telegram_sessions','ai_usage','audit_log','document_counters','idempotency_requests')),
+   'pending_actions','notifications','telegram_sessions','ai_usage','audit_log','document_counters','idempotency_requests','telegram_link_tokens')),
  'RLS is enabled on every app table');
 select extensions.is((select count(*)::integer from storage.buckets where id in ('invoices','receipts') and not public),2,'invoice and receipt storage buckets are private');
 select * from extensions.finish();

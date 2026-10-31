@@ -1,6 +1,7 @@
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { afterEach, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
 
 const mocks = vi.hoisted(() => ({ databaseRequest: vi.fn() }));
 vi.mock("../middleware/auth.js", () => ({
@@ -40,4 +41,21 @@ it("requires and forwards an idempotency key for ledger writes", async () => {
   }
   expect(mocks.databaseRequest).toHaveBeenCalledTimes(2);
   expect(mocks.databaseRequest.mock.calls[0][1].body).toMatchObject({ p_total_paise: "250", p_idem: "sale-12345678" });
+});
+
+it("creates a time-limited customer invitation and stores only its token hash", async () => {
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No TCP address");
+  mocks.databaseRequest.mockResolvedValueOnce([{ id: "20000000-0000-4000-8000-000000000001" }]).mockResolvedValueOnce(undefined);
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/clients/20000000-0000-4000-8000-000000000001/invitations`, { method: "POST" });
+  expect(response.status).toBe(201);
+  const link = await response.json() as { url: string; expiresAt: string };
+  const token = new URL(link.url).pathname.split("/").at(-1);
+  if (!token) throw new Error("Expected an invitation token");
+  expect(link.url).toContain("/invite/");
+  expect(Date.parse(link.expiresAt)).toBeGreaterThan(Date.now());
+  expect(mocks.databaseRequest.mock.calls[1][0]).toBe("client_invitations");
+  expect(mocks.databaseRequest.mock.calls[1][1].body).toMatchObject({ token_hash: createHash("sha256").update(token).digest("hex"), business_id: "10000000-0000-4000-8000-000000000001", client_id: "20000000-0000-4000-8000-000000000001" });
 });
