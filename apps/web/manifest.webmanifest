@@ -1,0 +1,10 @@
+{
+  "name": "KhataFlow",
+  "short_name": "KhataFlow",
+  "description": "A clear view of your KhataFlow account.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2ecde",
+  "theme_color": "#f2ecde",
+  "icons": [{ "src": "/assets/khataflow-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2ecde">
+  <meta name="description" content="A clear, simple view of your KhataFlow balance.">
+  <meta name="referrer" content="no-referrer">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/khataflow-mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <title>KhataFlow · Your khata</title>
+</head>
+<body>
+  <div class="offline" id="offline" role="status" hidden>You are offline. Payment actions need a connection.</div>
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="KhataFlow home"><span class="brand-mark" aria-hidden="true">K</span><span>KhataFlow</span></a>
+    <div class="masthead-actions"><span class="page-note">A clear account. A good relationship.</span><button class="text-button" id="language" type="button" aria-label="Switch language">हिन्दी</button><button class="install" id="install" type="button" hidden>Install</button></div>
+  </header>
+  <main id="app" class="page" aria-live="polite">
+    <div class="loading" aria-label="Loading your account"><span></span><span></span><span></span></div>
+  </main>
+  <footer><span>KhataFlow</span><span>Payments by Paytm</span></footer>
+  <script>window.KHATAFLOW_API_URL = "__API_URL__";</script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

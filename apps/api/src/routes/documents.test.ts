@@ -1,6 +1,7 @@
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { afterEach, expect, it, vi } from "vitest";
+import { PDFDocument } from "pdf-lib";
 
 const mocks = vi.hoisted(() => ({ databaseRequest: vi.fn() }));
 vi.mock("../middleware/auth.js", () => ({
@@ -28,10 +29,13 @@ it("generates a private invoice PDF with Hindi text and redirects to a signed UR
     .mockResolvedValueOnce([{ name: "रामेश", phone: "9999999999", address: "दिल्ली" }])
     .mockResolvedValueOnce([{ name: "दुकान" }])
     .mockResolvedValueOnce([]);
-  const provider = vi.fn(async (input: RequestInfo | URL) => String(input).includes("/object/sign/")
-    ? Response.json({ signedURL: "/object/sign/invoices/10000000-0000-4000-8000-000000000001/invoice-1.pdf?token=test" })
-    : new Response(null, { status: 200 }));
-  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => String(input).startsWith("http://127.0.0.1") ? actualFetch(input, init) : provider(input)));
+  let generatedPdf: Uint8Array | undefined;
+  const provider = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input).includes("/object/sign/")) return Response.json({ signedURL: "/object/sign/invoices/10000000-0000-4000-8000-000000000001/invoice-1.pdf?token=test" });
+    generatedPdf = new Uint8Array(await new Response(init?.body).arrayBuffer());
+    return new Response(null, { status: 200 });
+  });
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => String(input).startsWith("http://127.0.0.1") ? actualFetch(input, init) : provider(input, init)));
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const address = server.address();
@@ -41,7 +45,31 @@ it("generates a private invoice PDF with Hindi text and redirects to a signed UR
   expect(response.status, responseBody).toBe(302);
   expect(response.headers.get("location")).toContain("/storage/v1/object/sign/invoices/");
   expect(provider).toHaveBeenCalledTimes(2);
-  const upload = provider.mock.calls[0][0] as RequestInfo | URL;
+  const upload = provider.mock.calls[0][0];
   expect(String(upload)).toContain("/storage/v1/object/invoices/");
+  expect(generatedPdf?.slice(0, 4)).toEqual(new TextEncoder().encode("%PDF"));
+  expect((await PDFDocument.load(generatedPdf!)).getPageCount()).toBe(1);
   expect(mocks.databaseRequest.mock.calls[3][1]).toMatchObject({ method: "PATCH", body: { pdf_path: "10000000-0000-4000-8000-000000000001/invoice-1.pdf" } });
+});
+
+it("generates a private receipt PDF for the linked payment", async () => {
+  mocks.databaseRequest
+    .mockResolvedValueOnce([{ id: "receipt-1", business_id: "10000000-0000-4000-8000-000000000001", payment_id: "payment-1", number: "KF-R-2026-0001", issued_at: "2026-10-31T00:00:00Z" }])
+    .mockResolvedValueOnce([{ id: "payment-1", business_id: "10000000-0000-4000-8000-000000000001", client_id: "client-1", amount_paise: "15000", method: "CASH" }])
+    .mockResolvedValueOnce([{ name: "रामेश" }])
+    .mockResolvedValueOnce([{ name: "दुकान" }])
+    .mockResolvedValueOnce([]);
+  const provider = vi.fn(async (input: RequestInfo | URL) => String(input).includes("/object/sign/")
+    ? Response.json({ signedURL: "/object/sign/receipts/10000000-0000-4000-8000-000000000001/receipt-1.pdf?token=test" })
+    : new Response(null, { status: 200 }));
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => String(input).startsWith("http://127.0.0.1") ? actualFetch(input, init) : provider(input)));
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No TCP address");
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/receipts/receipt-1/pdf`, { redirect: "manual" });
+  expect(response.status).toBe(302);
+  expect(response.headers.get("location")).toContain("/storage/v1/object/sign/receipts/");
+  expect(String(provider.mock.calls[0][0])).toContain("/storage/v1/object/receipts/");
+  expect(mocks.databaseRequest.mock.calls[4][1]).toMatchObject({ method: "PATCH", body: { pdf_path: "10000000-0000-4000-8000-000000000001/receipt-1.pdf" } });
 });

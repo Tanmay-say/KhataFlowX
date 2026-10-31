@@ -4,8 +4,10 @@ import {
   invoiceCreateSchema, paymentSchema, saleSchema, stockAdjustSchema,
 } from "@khataflow/shared/auth";
 import { authenticate, requireBusiness } from "../middleware/auth.js";
+import { env } from "../config/env.js";
 import { databaseRequest, sendDatabaseError } from "../services/database.js";
 import { invoicePdf, receiptPdf } from "../services/documents.js";
+import { createPortalToken } from "../services/portalTokens.js";
 
 export const coreRouter = Router();
 coreRouter.use("/api", authenticate, requireBusiness);
@@ -48,6 +50,17 @@ coreRouter.get("/api/clients/:id", async (req, res) => {
   const params = new URLSearchParams({ select: columns.clients, business_id: `eq.${business(req)}`, id: `eq.${req.params.id}`, limit: "1" });
   try { const [client] = await databaseRequest<Record<string, unknown>[]>(`clients?${params}`); if (client) res.json(client); else res.status(404).json({ error: "not_found" }); }
   catch (error) { sendDatabaseError(error, res); }
+});
+
+coreRouter.get("/api/clients/:id/share-link", async (req, res) => {
+  const params = new URLSearchParams({ select: "id", business_id: `eq.${business(req)}`, id: `eq.${req.params.id}`, archived_at: "is.null", limit: "1" });
+  try {
+    const [client] = await databaseRequest<Record<string, unknown>[]>(`clients?${params}`);
+    if (!client) return res.status(404).json({ error: "not_found" });
+    const { token, expiresAt } = createPortalToken(business(req), req.params.id);
+    res.setHeader("cache-control", "no-store");
+    return res.json({ url: new URL(`/pay/${token}`, env.APP_URL).toString(), expiresAt: new Date(expiresAt * 1000).toISOString() });
+  } catch { return res.status(503).json({ error: "portal_link_unavailable" }); }
 });
 
 coreRouter.patch("/api/clients/:id", async (req, res) => {
@@ -193,7 +206,7 @@ coreRouter.post("/api/invoices", async (req, res) => {
 coreRouter.get("/api/invoices/:id/pdf", async (req, res) => {
   try {
     const url = await invoicePdf(business(req), req.params.id);
-    if (url) return res.redirect(302, url);
+    if (url) { res.setHeader("cache-control", "no-store"); return res.redirect(302, url); }
     return res.status(404).json({ error: "not_found" });
   } catch { return res.status(503).json({ error: "document_unavailable" }); }
 });
@@ -206,7 +219,7 @@ coreRouter.get("/api/receipts", async (req, res) => {
 coreRouter.get("/api/receipts/:id/pdf", async (req, res) => {
   try {
     const url = await receiptPdf(business(req), req.params.id);
-    if (url) return res.redirect(302, url);
+    if (url) { res.setHeader("cache-control", "no-store"); return res.redirect(302, url); }
     return res.status(404).json({ error: "not_found" });
   } catch { return res.status(503).json({ error: "document_unavailable" }); }
 });

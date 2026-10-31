@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import "regenerator-runtime/runtime.js";
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, rgb, type PDFPage } from "pdf-lib";
 import { env } from "../config/env.js";
 import { databaseRequest } from "./database.js";
 
@@ -76,8 +76,9 @@ async function uploadAndSign(bucket: "invoices" | "receipts", path: string, byte
   if (!response.ok) throw new Error("Storage signing failed");
   const data = await response.json() as { signedURL?: unknown };
   if (typeof data.signedURL !== "string") throw new Error("Storage signing failed");
-  const signed = data.signedURL.startsWith("http") ? data.signedURL : `${base}${data.signedURL.startsWith("/") ? "" : "/"}${data.signedURL}`;
-  return signed;
+  const signed = new URL(data.signedURL.startsWith("http") ? data.signedURL : `${base}${data.signedURL.startsWith("/") ? "" : "/"}${data.signedURL}`);
+  if (signed.origin !== new URL(env.SUPABASE_URL).origin) throw new Error("Storage signing failed");
+  return signed.href;
 }
 
 async function getDocument<T extends Row>(table: string, id: string, businessId: string, columns: string) {
@@ -99,9 +100,11 @@ async function getBusinessName(businessId: string) {
 
 async function getOrCreate(bucket: "invoices" | "receipts", businessId: string, id: string, document: Row, client: Row, businessName: string, title: string, number: string, date: string, lines: Row[], total: unknown, paid: unknown, status: string) {
   let path = text(document.pdf_path, 240);
+  const expectedPath = `${businessId}/${id}.pdf`;
+  if (path && path !== expectedPath) throw new Error("Invalid document path");
   let bytes: Buffer | undefined;
   if (!path) {
-    path = `${businessId}/${id}.pdf`;
+    path = expectedPath;
     bytes = await makePdf(title, number, date, businessName, client, lines, total, paid, status);
     const signed = await uploadAndSign(bucket, path, bytes);
     const params = new URLSearchParams({ id: `eq.${id}`, business_id: `eq.${businessId}` });

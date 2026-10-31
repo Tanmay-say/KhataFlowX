@@ -29,4 +29,8 @@ export const env = z.object({
   SARVAM_TTS_SPEAKER: z.string().default("shubh"),
   VOICE_MAX_SECONDS: z.coerce.number().int().min(1).max(30).default(30),
   TTS_ENABLED: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
+  PAYMENT_PROVIDER: z.enum(["mock", "paytm"]).default("mock"),
+  ALLOW_MOCK: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  PORTAL_SIGNING_SECRET: z.string().optional().transform((value) => value?.trim() || undefined).refine((value) => !value || value.length >= 16),
+  PORTAL_LINK_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(72),
 }).parse(process.env);

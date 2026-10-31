@@ -1,5 +1,5 @@
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(7);
+select extensions.plan(8);
 select extensions.has_table('public','businesses','business workspace table exists');
 select extensions.has_table('public','clients','shopkeeper client records exist');
 select extensions.has_table('public','client_profiles','client login profile table exists');
@@ -12,4 +12,5 @@ select extensions.ok(
    'inventory','invoices','payments','receipts','ledger_entries','payment_confirmations','orders','chat_messages',
    'pending_actions','notifications','telegram_sessions','ai_usage','audit_log','document_counters','idempotency_requests')),
  'RLS is enabled on every app table');
+select extensions.is((select count(*)::integer from storage.buckets where id in ('invoices','receipts') and not public),2,'invoice and receipt storage buckets are private');
 select * from extensions.finish();
