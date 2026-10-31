@@ -5,6 +5,7 @@ import {
 } from "@khataflow/shared/auth";
 import { authenticate, requireBusiness } from "../middleware/auth.js";
 import { databaseRequest, sendDatabaseError } from "../services/database.js";
+import { invoicePdf, receiptPdf } from "../services/documents.js";
 
 export const coreRouter = Router();
 coreRouter.use("/api", authenticate, requireBusiness);
@@ -187,4 +188,25 @@ coreRouter.post("/api/invoices", async (req, res) => {
   if (total <= 0n || total > 9223372036854775807n) return res.status(400).json({ error: "invalid_invoice_total" });
   try { res.status(201).json(await databaseRequest("rpc/rpc_create_invoice", { method: "POST", body: { p_business: business(req), p_client: input.data.clientId, p_items: input.data.items, p_due_date: input.data.dueDate ?? null, p_idem: key, p_actor: actor(req) } })); }
   catch (error) { sendDatabaseError(error, res); }
+});
+
+coreRouter.get("/api/invoices/:id/pdf", async (req, res) => {
+  try {
+    const url = await invoicePdf(business(req), req.params.id);
+    if (url) return res.redirect(302, url);
+    return res.status(404).json({ error: "not_found" });
+  } catch { return res.status(503).json({ error: "document_unavailable" }); }
+});
+
+coreRouter.get("/api/receipts", async (req, res) => {
+  const params = new URLSearchParams({ select: "id,payment_id,number,issued_at,created_at,pdf_path", business_id: `eq.${business(req)}`, order: "issued_at.desc", limit: "100" });
+  try { res.json(await databaseRequest(`receipts?${params}`)); } catch (error) { sendDatabaseError(error, res); }
+});
+
+coreRouter.get("/api/receipts/:id/pdf", async (req, res) => {
+  try {
+    const url = await receiptPdf(business(req), req.params.id);
+    if (url) return res.redirect(302, url);
+    return res.status(404).json({ error: "not_found" });
+  } catch { return res.status(503).json({ error: "document_unavailable" }); }
 });

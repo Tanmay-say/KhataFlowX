@@ -5,6 +5,7 @@ import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { coreRouter } from "./routes/core.js";
 import { chatRouter } from "./routes/chat.js";
+import { voiceRouter } from "./routes/voice.js";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(authRouter);
 app.use(coreRouter);
 app.use(chatRouter);
+app.use(voiceRouter);
 app.use(healthRouter);
 
 export default app;

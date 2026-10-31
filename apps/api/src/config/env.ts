@@ -21,4 +21,12 @@ export const env = z.object({
   MUSE_REASONING_EFFORT: z.enum(["minimal", "low", "medium", "high", "xhigh"]).default("minimal"),
   MUSE_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(30000),
   MUSE_FALLBACK_MODEL: z.string().optional(),
+  SARVAM_API_KEY: z.string().optional(),
+  SARVAM_API_URL: z.string().url().default("https://api.sarvam.ai"),
+  SARVAM_STT_MODEL: z.string().default("saaras:v3"),
+  SARVAM_STT_MODE: z.enum(["transcribe", "translate", "verbatim", "translit", "codemix"]).default("transcribe"),
+  SARVAM_TTS_MODEL: z.string().default("bulbul:v3"),
+  SARVAM_TTS_SPEAKER: z.string().default("shubh"),
+  VOICE_MAX_SECONDS: z.coerce.number().int().min(1).max(30).default(30),
+  TTS_ENABLED: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
 }).parse(process.env);
