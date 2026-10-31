@@ -1,0 +1,28 @@
+{
+  "name": "khataflow",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "corepack pnpm --filter @khataflow/api dev",
+    "check": "eslint apps/api && tsc -p apps/api/tsconfig.json --noEmit && vitest run && node scripts/check-forbidden.mjs",
+    "lint": "eslint apps/api",
+    "typecheck": "tsc -p apps/api/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "forbidden": "node scripts/check-forbidden.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.19.9",
+    "eslint": "^9.28.0",
+    "globals": "^16.3.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "vitest": "^3.2.4"
+  }
+}

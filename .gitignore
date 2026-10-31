@@ -1,21 +1,16 @@
 # ==========================================
-# Dependencies
+# Dependencies (pnpm workspace)
 # ==========================================
 node_modules/
-jspm_packages/
-web_modules/
+.pnpm-store/
 
 # ==========================================
-# Production & Build Outputs
+# Build & Distribution (Vite React & Node API)
 # ==========================================
 dist/
 dist-ssr/
 build/
 out/
-.next/
-.nuxt/
-.vuepress/dist/
-.serverless/
 *.tsbuildinfo
 
 # ==========================================
@@ -23,59 +18,55 @@ out/
 # ==========================================
 .env
 .env.*
-!.env.example
-!.env.template
-*/.env
-*/**/.env
+*.env
+apps/*/.env*
+packages/*/.env*
+!**/.env.example
+!**/.env.template
 
 # ==========================================
-# Logs & Runtime
+# Supabase Local Development
+# ==========================================
+supabase/.temp/
+supabase/.branches/
+
+# ==========================================
+# Logs & Process IDs
 # ==========================================
 logs/
 *.log
+pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-pids/
 *.pid
 *.seed
 *.pid.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
 
 # ==========================================
-# Testing & Code Coverage
+# Testing & Code Coverage (Vitest)
 # ==========================================
 coverage/
 .nyc_output/
 *.lcov
-.clinic/
 
 # ==========================================
 # Caches & Temporary Files
 # ==========================================
 .cache/
-.parcel-cache/
 .eslintcache
 .stylelintcache
 .prettiercache
 .turbo/
 *.tmp
 *.temp
+scratch/
+Project Analysis Review.json
 
 # ==========================================
-# Package Manager Specific
-# ==========================================
-.npm/
-.yarn/cache/
-.yarn/unplugged/
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# ==========================================
-# OS & IDE Files
+# Operating System Files
 # ==========================================
 # macOS
 .DS_Store
@@ -90,7 +81,9 @@ ehthumbs.db
 ehthumbs_vista.db
 [Dd]esktop.ini
 
-# Editors & IDEs
+# ==========================================
+# IDE & Editor Settings
+# ==========================================
 .idea/
 .vscode/*
 !.vscode/settings.json
@@ -98,7 +91,16 @@ ehthumbs_vista.db
 !.vscode/launch.json
 !.vscode/extensions.json
 *.suo
-*.ntvs*
-*.njsproj
 *.sln
 *.sw?
+.github/
+
+# ==========================================
+# DOCS
+# ==========================================
+
+/docs
+/docs/.env
+Khataflow_V2_PRD.md
+AGENTS.md
+STATE.md
