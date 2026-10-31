@@ -1,0 +1,17 @@
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(5);
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select extensions.is((select count(*)::integer from public.businesses),1,'shopkeeper sees only their business');
+select extensions.is((select count(*)::integer from public.clients),8,'shopkeeper sees only clients from their business');
+reset role;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000099',true);
+set local role authenticated;
+select extensions.is((select count(*)::integer from public.businesses),0,'unlinked user cannot see any business');
+reset role;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
+set local role authenticated;
+select extensions.is((select count(*)::integer from public.businesses),1,'second shopkeeper sees only their own business');
+select extensions.is((select count(*)::integer from public.clients),0,'second shopkeeper cannot see the first shopkeeper clients');
+reset role;
+select * from extensions.finish();

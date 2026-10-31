@@ -1,0 +1,12 @@
+{
+  "name": "@khataflow/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./auth": "./src/auth.ts",
+    "./chat": "./src/chat.ts"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}

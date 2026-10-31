@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "corepack pnpm --filter @khataflow/api dev",
+    "ai:check": "corepack pnpm --filter @khataflow/api ai:check",
+    "ai:eval": "corepack pnpm --filter @khataflow/api ai:eval",
     "check": "eslint apps/api && tsc -p apps/api/tsconfig.json --noEmit && vitest run && node scripts/check-forbidden.mjs",
     "lint": "eslint apps/api",
     "typecheck": "tsc -p apps/api/tsconfig.json --noEmit",

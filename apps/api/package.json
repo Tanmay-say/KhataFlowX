@@ -3,15 +3,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "ai:check": "tsx src/scripts/ai-check.ts",
+    "ai:eval": "tsx src/scripts/ai-eval.ts"
   },
   "dependencies": {
+    "@khataflow/shared": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
+    "jose": "^6.2.14",
+    "json-bigint": "^1.0.0",
+    "openai": "^7.47.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/json-bigint": "^1.0.4",
     "tsx": "^4.20.3"
   }
 }
